@@ -25,3 +25,7 @@ pip install opencv-python
 
 
 ## Change root directory
+
+```
+.../TurtleNet
+```
