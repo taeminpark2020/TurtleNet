@@ -3,16 +3,14 @@ TurtleNet detects textneck
 
 # 0. Basic Settings
 
-## Add New Virtualenv Environment(venv)
+## Add New Anaconda Environment (Anaconda)
 
 ## Install the following libraries
 
-```
-pip install torch
-```
+(CAUTION, please check your cuda version)
 
 ```
-pip install torchvision
+conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
 ```
 
 ```
@@ -22,8 +20,6 @@ pip install matplotlib
 ```
 pip install opencv-python
 ```
-
-
 ## Change root directory
 
 ```
