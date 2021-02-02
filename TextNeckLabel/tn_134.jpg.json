@@ -1,0 +1,35 @@
+{
+    "description": "",
+    "tags": [],
+    "size": {
+        "height": 1390,
+        "width": 867
+    },
+    "objects": [
+        {
+            "id": 610262250,
+            "classId": 2752914,
+            "description": "",
+            "geometryType": "graph",
+            "labelerLogin": "volta2030",
+            "createdAt": "2021-01-28T02:13:15.258Z",
+            "updatedAt": "2021-01-28T02:13:20.540Z",
+            "tags": [],
+            "classTitle": "TextNeck",
+            "nodes": {
+                "a58833ac-5d69-4d54-9e1d-542d016ca326": {
+                    "loc": [
+                        434,
+                        417
+                    ]
+                },
+                "226b28ac-ae41-4cdf-b841-a4e3f820e527": {
+                    "loc": [
+                        679.8063400892345,
+                        736.450928388748
+                    ]
+                }
+            }
+        }
+    ]
+}
