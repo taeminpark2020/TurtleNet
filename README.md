@@ -25,3 +25,5 @@ pip install opencv-python
 ```
 .../TurtleNet/
 ```
+
+# 1. Model structure
