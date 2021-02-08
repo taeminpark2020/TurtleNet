@@ -9,7 +9,7 @@ import turtlenet_arch
 import matplotlib.pyplot as plt
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size=5
@@ -19,10 +19,10 @@ torchvision_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-dataset = textneck_dataset.TextneckDataset(root_dir='/home/ptm0228/PycharmProjects/longstone/', transform=torchvision_transform)
+dataset = textneck_dataset.TextneckDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 dataloader = textneck_dataset.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='/home/ptm0228/PycharmProjects/longstone/', transform=torchvision_transform)
+test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 turtlenet = turtlenet_arch.TurtleNet(pretrained=False).to(device)

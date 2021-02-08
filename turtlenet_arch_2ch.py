@@ -246,7 +246,7 @@ class ResNet(nn.Module):
                  norm_layer=None):
         super(ResNet, self).__init__()
 
-        self.attn_layer = AttentionConv(64, 64, kernel_size=3, padding=1)
+        #self.attn_layer = AttentionConv(64, 64, kernel_size=3, padding=1)
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -299,12 +299,22 @@ class ResNet(nn.Module):
 
         #Reconstruction
         self.norm_layer = nn.LayerNorm([512,8,8])
+        # self.norm_layer = nn.LayerNorm([2048, 8, 8])
 
+
+        #for basicblock
         self.transpose_conv_0 = nn.ConvTranspose2d(512,256,3,2,1,1)
         self.transpose_conv_1 = nn.ConvTranspose2d(512,128,3,2,1,1)
         self.transpose_conv_2 = nn.ConvTranspose2d(256,64,3,2,1,1)
         self.transpose_conv_3 = nn.ConvTranspose2d(128,16,3,2,1,1)
         self.transpose_conv_4 = nn.ConvTranspose2d(16,2,3,2,1,1)
+
+        #for bottleneck
+        # self.transpose_conv_0 = nn.ConvTranspose2d(2048, 1024, 3, 2, 1, 1)
+        # self.transpose_conv_1 = nn.ConvTranspose2d(2048,512,3,2,1,1)
+        # self.transpose_conv_2 = nn.ConvTranspose2d(1024,256,3,2,1,1)
+        # self.transpose_conv_3 = nn.ConvTranspose2d(512,32,3,2,1,1)
+        # self.transpose_conv_4 = nn.ConvTranspose2d(32,2,3,2,1,1)
 
         self.reduce_noise = nn.Conv2d(2,2,1)
         #Reduce filter
@@ -341,7 +351,7 @@ class ResNet(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        x = self.attn_layer(x)
+        #x = self.attn_layer(x)
 
         x1 = self.layer1(x)
         x2 = self.layer2(x1)

@@ -7,9 +7,11 @@ import torch.nn as nn
 import os
 import turtlenet_arch_2ch
 import matplotlib.pyplot as plt
+import torch.onnx
+import onnx
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 batch_size=10
@@ -19,10 +21,10 @@ torchvision_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-dataset = textneck_dataset.TextneckDataset(root_dir='/home/ptm0228/PycharmProjects/longstone/', transform=torchvision_transform)
+dataset = textneck_dataset.TextneckDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 dataloader = textneck_dataset.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='/home/ptm0228/PycharmProjects/longstone/', transform=torchvision_transform)
+test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 turtlenet = turtlenet_arch_2ch.TurtleNet(pretrained=False).to(device)
@@ -60,6 +62,11 @@ for epoch in range(1000):
         optimizer.step()
 
         running_loss +=loss.item()
+        #netron
+        # params = turtlenet.state_dict()
+        # dummy_data = torch.empty(1,3,256,256,dtype=torch.float32).to(device)
+        #
+        # torch.onnx.export(turtlenet,dummy_data,"turtlenet_basic_block.onnx")
 
     if epoch%25==0 and epoch!=0:
         with torch.no_grad():
