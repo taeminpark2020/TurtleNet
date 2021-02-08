@@ -5,7 +5,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 import os
-import turtlenet_arch_2ch
+import turtlenet_arch_3ch
 import matplotlib.pyplot as plt
 import torch.onnx
 import onnx
@@ -27,7 +27,7 @@ dataloader = textneck_dataset.DataLoader(dataset, batch_size=batch_size, shuffle
 test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
-turtlenet = turtlenet_arch_2ch.TurtleNet(pretrained=False).to(device)
+turtlenet = turtlenet_arch_3ch.TurtleNet(pretrained=False).to(device)
 # recon_ear = recon.ReconEar().to(device)
 # recon_c7 = recon.ReconC7().to(device)
 
@@ -53,7 +53,7 @@ for epoch in range(1000):
         # ear_pred = recon_ear(feature_output)
         # c7_pred = recon_c7(feature_output)
 
-        loss = criterition(torch.stack((ear_target, c7_target),dim=1).to(device),feature_output.to(device))
+        loss = criterition(torch.stack((ear_target, c7_target, ear_target+c7_target),dim=1).to(device),feature_output.to(device))
         #loss = criterition((ear_target+c7_target).to(device), feature_output.view(-1,256,256).to(device))
         #loss = criterition(ear_pred, ear_target.to(device))+criterition(c7_pred, c7_target.to(device))
         loss.backward()
@@ -85,7 +85,7 @@ for epoch in range(1000):
 
                 ax2 = fig.add_subplot(rows, cols, 2)
                 #+feature_output_test[0][1]
-                ax2.imshow((feature_output_test[0][0]+feature_output_test[0][1]).cpu())
+                ax2.imshow((feature_output_test[0][2]).cpu())
                 ax2.set_title('Heatmap')
                 ax2.axis("off")
 
