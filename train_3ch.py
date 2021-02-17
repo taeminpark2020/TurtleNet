@@ -57,8 +57,6 @@ for epoch in range(1000):
         #loss = criterition((ear_target+c7_target).to(device), feature_output.view(-1,256,256).to(device))
         #loss = criterition(ear_pred, ear_target.to(device))+criterition(c7_pred, c7_target.to(device))
         loss.backward()
-
-
         optimizer.step()
 
         running_loss +=loss.item()
