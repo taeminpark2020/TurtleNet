@@ -28,4 +28,4 @@ pip install opencv-python
 
 # 1. Model structure
 
-## 2채널이 학습에 가장 적합함
+2채널이 학습에 가장 적합함
