@@ -25,7 +25,7 @@ dataset = textneck_dataset.TextneckDataset(root_dir='C:/Users/user/TurtleNet/', 
 dataloader = textneck_dataset.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
-test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
+test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 turtlenet = turtlenet_arch_3ch.TurtleNet(pretrained=False).to(device)
 # recon_ear = recon.ReconEar().to(device)
