@@ -33,7 +33,6 @@ turtlenet = turtlenet_arch_2ch.TurtleNet(pretrained=False).to(device)
 
 #Define Loss
 criterition = nn.MSELoss(reduction="sum")
-
 #Define Parameters
 #parameters = list(resnet.parameters())+list(recon_ear.parameters())+list(recon_c7.parameters())
 
@@ -48,48 +47,56 @@ for epoch in range(1000):
     for input, ear_target, c7_target in dataloader:
 
         optimizer.zero_grad()
-
         feature_output = turtlenet(input.to(device))
-        # ear_pred = recon_ear(feature_output)
-        # c7_pred = recon_c7(feature_output)
-
         loss = criterition(torch.stack((ear_target, c7_target),dim=1).to(device),feature_output.to(device))
-        #loss = criterition((ear_target+c7_target).to(device), feature_output.view(-1,256,256).to(device))
-        #loss = criterition(ear_pred, ear_target.to(device))+criterition(c7_pred, c7_target.to(device))
         loss.backward()
-
-
         optimizer.step()
-
         running_loss +=loss.item()
+
+
+
         #netron
         # params = turtlenet.state_dict()
         # dummy_data = torch.empty(1,3,256,256,dtype=torch.float32).to(device)
         #
         # torch.onnx.export(turtlenet,dummy_data,"turtlenet_basic_block.onnx")
 
-    if epoch%25==0 and epoch!=0:
-        with torch.no_grad():
-            for input_test in test_dataloader:
+    # if epoch%50==0 and epoch!=0:
+    #     with torch.no_grad():
+    #         for input_test in test_dataloader:
+    #
+    #             feature_output_test=turtlenet(input_test.to(device))
+    #
+    #             fig = plt.figure()
+    #             rows = 1
+    #             cols = 2
+    #
+    #             ax1 = fig.add_subplot(rows, cols, 1)
+    #             ax1.imshow(input_test[0].permute(1,2,0))
+    #             ax1.set_title('Input image')
+    #             ax1.axis("off")
+    #
+    #             ax2 = fig.add_subplot(rows, cols, 2)
+    #             #+feature_output_test[0][1]
+    #             ax2.imshow((feature_output_test[0][0]+feature_output_test[0][1]).cpu())
+    #             ax2.set_title('Heatmap')
+    #             ax2.axis("off")
+    #
+    #             plt.show()
+    #             break;
 
-                feature_output_test=turtlenet(input_test.to(device))
+    if (epoch+1)%100==0 and epoch!=0:
+        try:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': turtlenet.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss
+            }, 'turtlenet_16_epoch_' + str(epoch+1) + '.pth')
 
-                fig = plt.figure()
-                rows = 1
-                cols = 2
+            print("save complete")
+        except:
+            print("save error!")
 
-                ax1 = fig.add_subplot(rows, cols, 1)
-                ax1.imshow(input_test[0].permute(1,2,0))
-                ax1.set_title('Input image')
-                ax1.axis("off")
-
-                ax2 = fig.add_subplot(rows, cols, 2)
-                #+feature_output_test[0][1]
-                ax2.imshow((feature_output_test[0][0]+feature_output_test[0][1]).cpu())
-                ax2.set_title('Heatmap')
-                ax2.axis("off")
-
-                plt.show()
-                break;
     print("epoch:", epoch + 1, running_loss)
 
