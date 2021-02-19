@@ -246,7 +246,7 @@ class ResNet(nn.Module):
                  norm_layer=None):
         super(ResNet, self).__init__()
 
-        #self.attn_layer = AttentionConv(64, 64, kernel_size=3, padding=1)
+        self.attn_layer = AttentionConv(64, 64, kernel_size=3, padding=1)
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -306,8 +306,8 @@ class ResNet(nn.Module):
         self.transpose_conv_0 = nn.ConvTranspose2d(512,256,3,2,1,1)
         self.transpose_conv_1 = nn.ConvTranspose2d(512,128,3,2,1,1)
         self.transpose_conv_2 = nn.ConvTranspose2d(256,64,3,2,1,1)
-        self.transpose_conv_3 = nn.ConvTranspose2d(128,16,3,2,1,1)
-        self.transpose_conv_4 = nn.ConvTranspose2d(16,2,3,2,1,1)
+        self.transpose_conv_3 = nn.ConvTranspose2d(128,32,3,2,1,1)
+        self.transpose_conv_4 = nn.ConvTranspose2d(32,8,3,2,1,1)
 
         #for bottleneck
         # self.transpose_conv_0 = nn.ConvTranspose2d(2048, 1024, 3, 2, 1, 1)
@@ -316,7 +316,7 @@ class ResNet(nn.Module):
         # self.transpose_conv_3 = nn.ConvTranspose2d(512,32,3,2,1,1)
         # self.transpose_conv_4 = nn.ConvTranspose2d(32,2,3,2,1,1)
 
-        self.reduce_noise = nn.Conv2d(2,2,1)
+        self.reduce_noise = nn.Conv2d(8,2,1)
         #Reduce filter
         #self.reduce_filter_0 = nn.ConvTranspose2d(512,128,3,2,1,1)
 
@@ -351,7 +351,7 @@ class ResNet(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        #x = self.attn_layer(x)
+        x = self.attn_layer(x)
 
         x1 = self.layer1(x)
         x2 = self.layer2(x1)
@@ -405,5 +405,10 @@ def TurtleNet(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet('TurtleNet', BasicBlock, [2, 2, 2, 2], pretrained, progress,
+    return _resnet('TurtleNet', BasicBlock, [3, 4, 6, 3], pretrained, progress,
                    **kwargs)
+
+#Resnet18
+
+#Resnet34
+#[3, 4, 6, 3]
