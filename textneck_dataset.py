@@ -33,11 +33,11 @@ class TextneckDataset (Dataset):
             for j in range(img_size):
                 distanceFromCenter = np.linalg.norm(np.array([i-img_size/2, j-img_size/2]))
                 #distanceFromCenter = 2.5*distanceFromCenter/(img_size/2)
-                distanceFromCenter = 2.5*distanceFromCenter/(img_size/2)
+                distanceFromCenter =5*distanceFromCenter/(img_size/2)
                 scaledGaussianProb = scaledGaussian(distanceFromCenter)
                 isotropicGrayscaleImage[i, j] = np.clip(scaledGaussianProb*255, 0, 255)
 
-        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/64
+        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/16
 
     def __len__(self):
         return len(self.index)
