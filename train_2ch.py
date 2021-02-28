@@ -7,8 +7,8 @@ import torch.nn as nn
 import os
 import turtlenet_arch_2ch
 import matplotlib.pyplot as plt
-import torch.onnx
 import onnx
+import adaptive_wing_loss
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -20,7 +20,7 @@ torchvision_transform = transforms.Compose([
     transforms.Resize((256,256)),
     transforms.ToTensor()
 ])
-
+#Train Dataloader & Test Dataloader
 dataset = textneck_dataset.TextneckDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 dataloader = textneck_dataset.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
@@ -28,16 +28,11 @@ test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user
 test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 turtlenet = turtlenet_arch_2ch.TurtleNet(pretrained=False).to(device)
-# recon_ear = recon.ReconEar().to(device)
-# recon_c7 = recon.ReconC7().to(device)
 
 #Define Loss
-criterition = nn.MSELoss(reduction="sum")
-#Define Parameters
-#parameters = list(resnet.parameters())+list(recon_ear.parameters())+list(recon_c7.parameters())
+criterition = adaptive_wing_loss.AdaptiveWingLoss()
 
 #Define Optimizer
-#criterition_resnet = nn.MSELoss(reduction='sum')
 optimizer = optim.Adam(turtlenet.parameters(), lr=0.0005)
 
 for epoch in range(1000):
@@ -48,20 +43,17 @@ for epoch in range(1000):
 
         optimizer.zero_grad()
         feature_output = turtlenet(input.to(device))
-        loss = criterition(torch.stack((ear_target, c7_target),dim=1).to(device),feature_output.to(device))
+        loss = criterition(feature_output.to(device),torch.stack((ear_target, c7_target),dim=1).to(device))
         loss.backward()
         optimizer.step()
         running_loss +=loss.item()
 
-
-
         #netron
         # params = turtlenet.state_dict()
         # dummy_data = torch.empty(1,3,256,256,dtype=torch.float32).to(device)
-        #
         # torch.onnx.export(turtlenet,dummy_data,"turtlenet_basic_block.onnx")
 
-    # if epoch%50==0 and epoch!=0:
+    # if epoch%2==0 and epoch!=0:
     #     with torch.no_grad():
     #         for input_test in test_dataloader:
     #
@@ -92,7 +84,7 @@ for epoch in range(1000):
                 'model_state_dict': turtlenet.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss
-            }, 'turtlenet_16_epoch_' + str(epoch+1) + '.pth')
+            }, 'turtlenet_255_AdaptiveWingLoss_epoch_' + str(epoch+1) + '.pth')
 
             print("save complete")
         except:

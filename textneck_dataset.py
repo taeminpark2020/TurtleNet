@@ -33,12 +33,13 @@ class TextneckDataset (Dataset):
             for j in range(img_size):
                 distanceFromCenter = np.linalg.norm(np.array([i-img_size/2, j-img_size/2]))
                 #distanceFromCenter = 2.5*distanceFromCenter/(img_size/2)
-                distanceFromCenter =5*distanceFromCenter/(img_size/2)
+                distanceFromCenter =2*distanceFromCenter/(img_size/2)
                 scaledGaussianProb = scaledGaussian(distanceFromCenter)
                 isotropicGrayscaleImage[i, j] = np.clip(scaledGaussianProb*255, 0, 255)
 
-        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/16
+        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/255
 
+        #print(self.heatmap, torch.max(self.heatmap))
     def __len__(self):
         return len(self.index)
 
@@ -52,7 +53,7 @@ class TextneckDataset (Dataset):
         try:
             self.input = image_data
 
-            if list(self.input.shape)[2] == 1:
+            if self.input.shape[2] == 1:
                 self.input = cv2.cvtColor(image_data, cv2.COLOR_GRAY2RGB)
 
         except:
@@ -119,11 +120,11 @@ torchvision_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-# dataset = TextneckDataset(root_dir='/home/ptm0228/PycharmProjects/longstone/', transform=torchvision_transform)
+# dataset = TextneckDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 # dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 #
 # for input, output_ear, output_c7 in dataloader:
-#     print(input ,output_ear.size(), output_c7.size())
+#     #print(torch.sum(output_ear), output_c7)
 #     fig = plt.figure()
 #     rows = 1
 #     cols = 3

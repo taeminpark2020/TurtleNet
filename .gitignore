@@ -1,4 +1,5 @@
 /venv
 onnx
 #용량이 너무 커서 안됨 구글 드라이브로 공유
-turtlenet_epoch_100.pth
+turtlenet_255_AdaptiveWingLoss_epoch_100.pth
+turtlenet_2_128_AdaptiveWingLoss_epoch_100.pth

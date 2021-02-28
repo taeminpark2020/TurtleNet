@@ -75,48 +75,48 @@ class BasicBlock(nn.Module):
         return out
 
 
-class Bottleneck(nn.Module):
-    expansion = 4
-    __constants__ = ['downsample']
-
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None):
-        super(Bottleneck, self).__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
-        width = int(planes * (base_width / 64.)) * groups
-        # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv1x1(inplanes, width)
-        self.bn1 = norm_layer(width)
-        self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        self.bn2 = norm_layer(width)
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        out = self.relu(out)
-
-        return out
+# class Bottleneck(nn.Module):
+#     expansion = 4
+#     __constants__ = ['downsample']
+#
+#     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
+#                  base_width=64, dilation=1, norm_layer=None):
+#         super(Bottleneck, self).__init__()
+#         if norm_layer is None:
+#             norm_layer = nn.BatchNorm2d
+#         width = int(planes * (base_width / 64.)) * groups
+#         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
+#         self.conv1 = conv1x1(inplanes, width)
+#         self.bn1 = norm_layer(width)
+#         self.conv2 = conv3x3(width, width, stride, groups, dilation)
+#         self.bn2 = norm_layer(width)
+#         self.conv3 = conv1x1(width, planes * self.expansion)
+#         self.bn3 = norm_layer(planes * self.expansion)
+#         self.relu = nn.ReLU(inplace=True)
+#         self.downsample = downsample
+#         self.stride = stride
+#
+#     def forward(self, x):
+#         identity = x
+#
+#         out = self.conv1(x)
+#         out = self.bn1(out)
+#         out = self.relu(out)
+#
+#         out = self.conv2(out)
+#         out = self.bn2(out)
+#         out = self.relu(out)
+#
+#         out = self.conv3(out)
+#         out = self.bn3(out)
+#
+#         if self.downsample is not None:
+#             identity = self.downsample(x)
+#
+#         out += identity
+#         out = self.relu(out)
+#
+#         return out
 
 '''Attention'''
 class AttentionConv(nn.Module):
@@ -246,7 +246,7 @@ class ResNet(nn.Module):
                  norm_layer=None):
         super(ResNet, self).__init__()
 
-        self.attn_layer = AttentionConv(64, 64, kernel_size=3, padding=1)
+        self.attn_layer = AttentionConv(64, 64, kernel_size=5, padding=2)
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -291,16 +291,16 @@ class ResNet(nn.Module):
         # This improves the model by 0.2~0.3% according to https://arxiv.org/abs/1706.02677
         if zero_init_residual:
             for m in self.modules():
-                if isinstance(m, Bottleneck):
-                    nn.init.constant_(m.bn3.weight, 0)
-                elif isinstance(m, BasicBlock):
+                if isinstance(m, BasicBlock):
                     nn.init.constant_(m.bn2.weight, 0)
-
+                # if isinstance(m, Bottleneck):
+                #     nn.init.constant_(m.bn3.weight, 0)
+                # elif isinstance(m, BasicBlock):
+                #     nn.init.constant_(m.bn2.weight, 0)
 
         #Reconstruction
         self.norm_layer = nn.LayerNorm([512,8,8])
         # self.norm_layer = nn.LayerNorm([2048, 8, 8])
-
 
         #for basicblock
         self.transpose_conv_0 = nn.ConvTranspose2d(512,256,3,2,1,1)
@@ -309,13 +309,7 @@ class ResNet(nn.Module):
         self.transpose_conv_3 = nn.ConvTranspose2d(128,32,3,2,1,1)
         self.transpose_conv_4 = nn.ConvTranspose2d(32,8,3,2,1,1)
 
-        #for bottleneck
-        # self.transpose_conv_0 = nn.ConvTranspose2d(2048, 1024, 3, 2, 1, 1)
-        # self.transpose_conv_1 = nn.ConvTranspose2d(2048,512,3,2,1,1)
-        # self.transpose_conv_2 = nn.ConvTranspose2d(1024,256,3,2,1,1)
-        # self.transpose_conv_3 = nn.ConvTranspose2d(512,32,3,2,1,1)
-        # self.transpose_conv_4 = nn.ConvTranspose2d(32,2,3,2,1,1)
-
+        #self.reduce_noise = nn.Conv2d(2, 2, 1)
         self.reduce_noise = nn.Conv2d(8,2,1)
         #Reduce filter
         #self.reduce_filter_0 = nn.ConvTranspose2d(512,128,3,2,1,1)
@@ -369,10 +363,8 @@ class ResNet(nn.Module):
         x = self.elu(x)
 
         x = self.transpose_conv_2(x)
-        #x = self.attn_layer(x)
         x = torch.cat((x,x1),1)
         x = self.elu(x)
-        # x = self.attn_layer(x)
 
         x = self.transpose_conv_3(x)
         x = self.elu(x)
@@ -409,6 +401,6 @@ def TurtleNet(pretrained=False, progress=True, **kwargs):
                    **kwargs)
 
 #Resnet18
-
+#[2, 2, 2, 2]
 #Resnet34
 #[3, 4, 6, 3]

@@ -15,15 +15,15 @@ torchvision_transform = transforms.Compose([
 
 device = torch.device("cuda")
 turtlenet = turtlenet_arch_2ch.TurtleNet().to(device)
-checkpoint = torch.load('C:/Users/user/TurtleNet/turtlenet_epoch_100.pth')
+checkpoint = torch.load('C:/Users/user/TurtleNet/turtlenet_255_AdaptiveWingLoss_epoch_100.pth')
 turtlenet.load_state_dict(checkpoint['model_state_dict'])
 turtlenet.eval()
 
 print("TurtleNet load complete.")
-
+###------WebCam------###
 # cap = cv2.VideoCapture(0)
 # prev_time = 0
-# FPS = 3
+# FPS = 10
 #
 # while(True):
 #     ret, frame = cap.read()    # Read 결과와 frame
@@ -36,19 +36,16 @@ print("TurtleNet load complete.")
 #
 #         feature_output=turtlenet(torch.reshape(torchvision_transform(torch.tensor(frame)),(1,3,256,256)).to(device))
 #
-#         cv2.imshow('heat_map',((feature_output[0][0] + feature_output[0][1]).cpu()).detach().numpy())
+#         #extract point
 #
+#         cv2.imshow('heat_map',((feature_output[0][0] + feature_output[0][1]).cpu()).detach().numpy())
+#         print(torch.max(feature_output[0][0]), torch.max(feature_output[0][1]))
 #         if cv2.waitKey(1) == ord('q'):
 #             break
 # cap.release()
 # cv2.destroyAllWindows()
 
-
-
-
-
-
-#
+###------Test_DataLoader------###
 test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
