@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from torch.nn import functional as F
+import SelfAttnLayer
 #from .utils import load_state_dict_from_url
 
 
@@ -246,7 +247,7 @@ class ResNet(nn.Module):
                  norm_layer=None):
         super(ResNet, self).__init__()
 
-        #self.attn_layer = AttentionConv(64, 64, kernel_size=5, padding=2)
+        self.attn_layer = SelfAttnLayer.AttentionConv(64, 64, kernel_size=5, padding=2)
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -300,17 +301,18 @@ class ResNet(nn.Module):
 
         #Reconstruction
         self.norm_layer = nn.LayerNorm([512,8,8])
+        self.upsample = nn.Upsample(scale_factor=2)
         # self.norm_layer = nn.LayerNorm([2048, 8, 8])
 
         #for basicblock
         self.transpose_conv_0 = nn.ConvTranspose2d(512,256,3,2,1,1)
         self.transpose_conv_1 = nn.ConvTranspose2d(512,128,3,2,1,1)
         self.transpose_conv_2 = nn.ConvTranspose2d(256,64,3,2,1,1)
-        self.transpose_conv_3 = nn.ConvTranspose2d(128,32,3,2,1,1)
-        self.transpose_conv_4 = nn.ConvTranspose2d(32,8,3,2,1,1)
+        self.transpose_conv_3 = nn.ConvTranspose2d(128,16,3,2,1,1)
+        #self.transpose_conv_4 = nn.ConvTranspose2d(32,8,3,2,1,1)
 
         #self.reduce_noise = nn.Conv2d(2, 2, 1)
-        self.reduce_noise = nn.Conv2d(8,2,1)
+        self.reduce_noise = nn.Conv2d(16,2,1)
         #Reduce filter
         #self.reduce_filter_0 = nn.ConvTranspose2d(512,128,3,2,1,1)
 
@@ -369,9 +371,10 @@ class ResNet(nn.Module):
         x = self.transpose_conv_3(x)
         x = self.elu(x)
 
-        x = self.transpose_conv_4(x)
-        x = self.elu(x)
+        # x = self.transpose_conv_4(x)
+        # x = self.elu(x)
 
+        x = self.upsample(x)
         x = self.reduce_noise(x)
 
         return x

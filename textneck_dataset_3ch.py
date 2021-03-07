@@ -24,8 +24,7 @@ class TextneckDataset (Dataset):
         self.index = tmp
         self.transform = transform
 
-        img_size = 41
-        self.img_size = img_size
+        img_size = 29
         scaledGaussian = lambda x : exp(-(1/2)*(x**2))
         isotropicGrayscaleImage = np.zeros((img_size, img_size), dtype='float')
 
@@ -33,11 +32,11 @@ class TextneckDataset (Dataset):
             for j in range(img_size):
                 distanceFromCenter = np.linalg.norm(np.array([i-img_size/2, j-img_size/2]))
                 #distanceFromCenter = 2.5*distanceFromCenter/(img_size/2)
-                distanceFromCenter =2*distanceFromCenter/(img_size/2)
+                distanceFromCenter =3*distanceFromCenter/(img_size/2)
                 scaledGaussianProb = scaledGaussian(distanceFromCenter)
                 isotropicGrayscaleImage[i, j] = np.clip(scaledGaussianProb*255, 0, 255)
 
-        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/128
+        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/255
 
         #print(self.heatmap, torch.max(self.heatmap))
     def __len__(self):
@@ -76,20 +75,21 @@ class TextneckDataset (Dataset):
 
         ear_heatmap=torch.zeros(int(256),int(256))
         c7_heatmap=torch.zeros(int(256),int(256))
+        bonus_heatmap=torch.zeros(256, 256)
 
         ear_coordinate = torch.tensor(self.output['objects'][0]['nodes']['a58833ac-5d69-4d54-9e1d-542d016ca326']['loc'])
 
         #int(ear_coordinate[1])-1 : H
         #int(ear_coordinate[0])-1 : W
         try:
-            ear_heatmap[(int(torch.round(ear_coordinate[1]*(256/self.output['size']['height'])))-1) -int(self.img_size/2):(int(torch.round(ear_coordinate[1]*(256/self.output['size']['height'])))-1)+int(self.img_size/2)+1,
-                        (int(torch.round(ear_coordinate[0]*(256/self.output['size']['width'])))-1) -int(self.img_size/2):(int(torch.round(ear_coordinate[0]*(256/self.output['size']['width'])))-1)+int(self.img_size/2)+1]=self.heatmap
+            ear_heatmap[(int(torch.round(ear_coordinate[1]*(256/self.output['size']['height'])))-1) -14:(int(torch.round(ear_coordinate[1]*(256/self.output['size']['height'])))-1)+15,
+                        (int(torch.round(ear_coordinate[0]*(256/self.output['size']['width'])))-1) -14:(int(torch.round(ear_coordinate[0]*(256/self.output['size']['width'])))-1)+15]=self.heatmap
         except:
             ear_heatmap=torch.zeros(int(512),int(512))
-            ear_heatmap[(int(torch.round(ear_coordinate[1] * (256 / self.output['size']['height']))) - 1)+128 -int(self.img_size/2):(int(
-                torch.round(ear_coordinate[1] * (256 / self.output['size']['height']))) - 1) + 128 +int(self.img_size/2)+1,
-            (int(torch.round(ear_coordinate[0] * (256 / self.output['size']['width']))) - 1) +128 -int(self.img_size/2):(int(
-                torch.round(ear_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 +int(self.img_size/2)+1] = self.heatmap
+            ear_heatmap[(int(torch.round(ear_coordinate[1] * (256 / self.output['size']['height']))) - 1)+128 -14:(int(
+                torch.round(ear_coordinate[1] * (256 / self.output['size']['height']))) - 1) + 128 +15,
+            (int(torch.round(ear_coordinate[0] * (256 / self.output['size']['width']))) - 1) +128 -14:(int(
+                torch.round(ear_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 +15] = self.heatmap
             ear_heatmap=ear_heatmap[128:384,128:384]
 
         c7_coordinate = torch.tensor(self.output['objects'][0]['nodes']['226b28ac-ae41-4cdf-b841-a4e3f820e527']['loc'])
@@ -97,21 +97,34 @@ class TextneckDataset (Dataset):
         #int(c7_coordinate[0])-1 : W
 
         try:
-            c7_heatmap[(int(torch.round(c7_coordinate[1]*(256/self.output['size']['height'])))-1)-int(self.img_size/2):(int(torch.round(c7_coordinate[1]*(256/self.output['size']['height'])))-1)+int(self.img_size/2)+1,
-                       (int(torch.round(c7_coordinate[0]*(256/self.output['size']['width'])))-1)-int(self.img_size/2):(int(torch.round(c7_coordinate[0]*(256/self.output['size']['width'])))-1)+int(self.img_size/2)+1]=self.heatmap
+            c7_heatmap[(int(torch.round(c7_coordinate[1]*(256/self.output['size']['height'])))-1)-14:(int(torch.round(c7_coordinate[1]*(256/self.output['size']['height'])))-1)+15,
+                       (int(torch.round(c7_coordinate[0]*(256/self.output['size']['width'])))-1)-14:(int(torch.round(c7_coordinate[0]*(256/self.output['size']['width'])))-1)+15]=self.heatmap
         except:
             c7_heatmap = torch.zeros(int(512), int(512))
-            c7_heatmap[(int(torch.round(c7_coordinate[1] * (256 / self.output['size']['height']))) - 1)+128 -int(self.img_size/2):(int(
-                torch.round(c7_coordinate[1] * (256 / self.output['size']['height']))) - 1) + 128 +int(self.img_size/2)+1,
-            (int(torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 -int(self.img_size/2):(int(
-                torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 +int(self.img_size/2)+1] = self.heatmap
+            c7_heatmap[(int(torch.round(c7_coordinate[1] * (256 / self.output['size']['height']))) - 1)+128 -14:(int(
+                torch.round(c7_coordinate[1] * (256 / self.output['size']['height']))) - 1) + 128 +15,
+            (int(torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 -14:(int(
+                torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 +15] = self.heatmap
             c7_heatmap =c7_heatmap[128:384,128:384]
+
+        try:
+            bonus_heatmap[int(((int(torch.round(ear_coordinate[1] * (256 / self.output['size']['height']))) - 1)+
+                          (int(torch.round(c7_coordinate[1]*(256/self.output['size']['height'])))-1))/2)- 14:
+                          int(((int(torch.round(ear_coordinate[1] * (256 / self.output['size']['height']))) - 1)+
+                          (int(torch.round(c7_coordinate[1]*(256/self.output['size']['height'])))-1))/2) + 15,
+            int(((int(torch.round(ear_coordinate[0] * (256 / self.output['size']['width']))) - 1) +
+                 (int(torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1)) / 2) - 14:
+            int(((int(torch.round(ear_coordinate[0] * (256 / self.output['size']['width']))) - 1) +
+                 (int(torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1)) / 2) + 15] = self.heatmap
+        except:
+            print("error")
 
         self.output_ear = ear_heatmap
         self.output_c7 = c7_heatmap
+        self.output_bonus = bonus_heatmap
 
         #Resize 256x256
-        return self.input, self.output_ear, self.output_c7
+        return self.input, self.output_ear, self.output_c7, self.output_bonus
 
 #transforms
 torchvision_transform = transforms.Compose([

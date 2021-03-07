@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
-import SelfAttnLayer
 import torch.nn.init as init
 from torch.nn import functional as F
-import deform_conv_v2
+import SelfAttnLayer
 #from .utils import load_state_dict_from_url
 
 
@@ -83,7 +82,7 @@ class ResNet(nn.Module):
                  norm_layer=None):
         super(ResNet, self).__init__()
 
-        #self.attn_layer = SelfAttnLayer.AttentionConv(32, 8, kernel_size=3, padding=1)
+        self.attn_layer = SelfAttnLayer.AttentionConv(32, 64, kernel_size=3, padding=1)
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -99,9 +98,9 @@ class ResNet(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=7, stride=2, padding=3, #self.inplanes
                                bias=False)
-        self.bn1 = norm_layer(self.inplanes)
+        self.bn1 = norm_layer(32) #self.inplanes
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -139,19 +138,19 @@ class ResNet(nn.Module):
         self.norm_layer = nn.LayerNorm([512,8,8])
         # self.norm_layer = nn.LayerNorm([2048, 8, 8])
 
+
         #for basicblock
         self.transpose_conv_0 = nn.ConvTranspose2d(512,256,3,2,1,1)
         self.transpose_conv_1 = nn.ConvTranspose2d(512,128,3,2,1,1)
         self.transpose_conv_2 = nn.ConvTranspose2d(256,64,3,2,1,1)
-        self.transpose_conv_3 = nn.ConvTranspose2d(128,64,3,2,1,1)
-        self.transpose_conv_4 = nn.ConvTranspose2d(128,32,3,2,1,1)
+        self.transpose_conv_3 = nn.ConvTranspose2d(128,32,3,2,1,1)
+        self.transpose_conv_4 = nn.ConvTranspose2d(64,3,3,2,1,1)
 
         #self.reduce_noise = nn.Conv2d(2, 2, 1)
+        self.reduce_noise = nn.Conv2d(16,3,1)
+
         #Reduce filter
         #self.reduce_filter_0 = nn.ConvTranspose2d(512,128,3,2,1,1)
-        self.deform = deform_conv_v2.DeformConv2d(32, 8, 3, padding=1, modulation=True)
-        self.noise_reduce_conv = nn.Conv2d(8,2,1)
-        #self.deform = deform_conv_v2.DeformConv2d(8,2,3,padding=1, modulation=True)
 
     def _make_layer(self, block, planes, blocks, stride=1, dilate=False):
         norm_layer = self._norm_layer
@@ -182,7 +181,8 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x0 = self.relu(x)
-        x = self.maxpool(x0)
+        x = self.attn_layer(x0)
+        x = self.maxpool(x)
 
         x1 = self.layer1(x)
         x2 = self.layer2(x1)
@@ -207,12 +207,10 @@ class ResNet(nn.Module):
         x = torch.cat((x,x0),1)
         x = self.elu(x)
 
-
         x = self.transpose_conv_4(x)
-        x = self.elu(x)
-        x = self.deform(x)
-
-        x = self.noise_reduce_conv(x)
+        # x = self.elu(x)
+        #
+        # x = self.reduce_noise(x)
 
         return x
 

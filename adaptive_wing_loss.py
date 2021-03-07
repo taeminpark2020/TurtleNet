@@ -4,7 +4,7 @@ from torch import nn
 
 # torch.log  and math.log is e based
 class AdaptiveWingLoss(nn.Module):
-    def __init__(self, omega=14, theta=0.5, epsilon=1, alpha=2.1):
+    def __init__(self, omega=14, theta=0.5, epsilon=2, alpha=2.1):
         super(AdaptiveWingLoss, self).__init__()
         self.omega = omega
         self.theta = theta

@@ -1,12 +1,14 @@
-import textneck_dataset
+import textneck_dataset_3ch
 import textneck_test_dataset
 import torchvision.transforms as transforms
 import torch
 import torch.optim as optim
 import torch.nn as nn
 import os
-import turtlenet_arch_2ch
+import turtlenet_arch_3ch
 import matplotlib.pyplot as plt
+import onnx
+import adaptive_wing_loss
 import visdom
 import numpy as np
 
@@ -21,18 +23,17 @@ torchvision_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 #Train Dataloader & Test Dataloader
-dataset = textneck_dataset.TextneckDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
-dataloader = textneck_dataset.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+dataset = textneck_dataset_3ch.TextneckDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
+dataloader = textneck_dataset_3ch.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 test_dataset = textneck_test_dataset.TextneckTestDataset(root_dir='C:/Users/user/TurtleNet/', transform=torchvision_transform)
 test_dataloader = textneck_test_dataset.DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 #turtlenet = turtlenet_arch_2ch.TurtleNet(pretrained=False).to(device)
-#turtlenet = turtlenet_arch_2ch_A.TurtleNet().to(device)
-turtlenet = turtlenet_arch_2ch.TurtleNet(pretrained=False).to(device)
+turtlenet = turtlenet_arch_3ch.TurtleNet().to(device)
 
 #Define Loss
-criterition = nn.MSELoss(reduction="sum")
+criterition = adaptive_wing_loss.AdaptiveWingLoss()
 
 #Define Optimizer
 optimizer = optim.Adam(turtlenet.parameters(), lr=0.0005)
@@ -55,11 +56,11 @@ for epoch in range(epochs):
 
     running_loss = 0.0
 
-    for input, ear_target, c7_target in dataloader:
+    for input, ear_target, c7_target, bonus_target in dataloader:
 
         optimizer.zero_grad()
         feature_output = turtlenet(input.to(device))
-        loss = criterition(feature_output.to(device),torch.stack((ear_target, c7_target),dim=1).to(device))
+        loss = criterition(feature_output.to(device),torch.stack((ear_target, c7_target, bonus_target),dim=1).to(device))
 
         loss.backward()
         optimizer.step()
@@ -81,7 +82,7 @@ for epoch in range(epochs):
                                      caption = "Ear_Heatmap",store_history=True))
                 vis.heatmap(X=np.flipud(feature_output_test[0][1].cpu()),opts=dict(title = "C7",
                                      caption = "C7_Heatmap",store_history=True))
-                vis.heatmap(X=np.flipud((feature_output_test[0][0]+feature_output_test[0][1]).cpu()),
+                vis.heatmap(X=np.flipud((feature_output_test[0][0]+feature_output_test[0][1]+feature_output_test[0][2]).cpu()),
                           opts=dict(title = "Ear+C7",caption = "Ear + C7_Heatmap",store_history=True))
                 # fig = plt.figure()
                 # rows = 1
