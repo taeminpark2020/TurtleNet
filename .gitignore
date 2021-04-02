@@ -2,3 +2,4 @@
 onnx
 #용량이 너무 커서 안됨 구글 드라이브로 공유
 DataPreProcessing
+*.pth

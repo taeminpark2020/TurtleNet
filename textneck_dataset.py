@@ -4,8 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import json
+import random
 import cv2
-import torch.functional as F
+
+import custom_transforms
+
 from math import exp
 
 '''
@@ -24,26 +27,29 @@ class TextneckDataset (Dataset):
         self.index = tmp
         self.transform = transform
 
-        img_size = 41
+        img_size = 39
         self.img_size = img_size
         scaledGaussian = lambda x : exp(-(1/2)*(x**2))
         isotropicGrayscaleImage = np.zeros((img_size, img_size), dtype='float')
 
+        sigma = 5
+
         for i in range(img_size):
             for j in range(img_size):
                 distanceFromCenter = np.linalg.norm(np.array([i-img_size/2, j-img_size/2]))
-                #distanceFromCenter = 2.5*distanceFromCenter/(img_size/2)
-                distanceFromCenter =2*distanceFromCenter/(img_size/2)
+                distanceFromCenter =distanceFromCenter/sigma
                 scaledGaussianProb = scaledGaussian(distanceFromCenter)
-                isotropicGrayscaleImage[i, j] = np.clip(scaledGaussianProb*255, 0, 255)
+                isotropicGrayscaleImage[i, j] = np.clip(scaledGaussianProb, 0, 1)
 
-        self.heatmap = (torch.tensor(isotropicGrayscaleImage))/128
+        self.heatmap = (torch.tensor(isotropicGrayscaleImage))
 
         #print(self.heatmap, torch.max(self.heatmap))
     def __len__(self):
         return len(self.index)
 
     def __getitem__(self, idx):
+
+        self.random = random.randint(0,180)
 
         with open(self.root_dir+'TextNeckLabel/'+self.index[idx]+'.json') as f:
             json_data = json.load(f)
@@ -54,14 +60,21 @@ class TextneckDataset (Dataset):
             self.input = image_data
 
             if self.input.shape[2] == 1:
-                self.input = cv2.cvtColor(image_data, cv2.COLOR_GRAY2RGB)
+                self.input = cv2.cvtColor(np.float32(image_data), cv2.COLOR_GRAY2RGB)
 
         except:
             self.input = cv2.cvtColor(image_data, cv2.COLOR_GRAY2RGB)
         #self.input = image_data
 
         if self.transform:
-            self.input = self.transform(self.input)
+            #self.input = self.transform(self.input)
+            self.input = custom_transforms.ToTensor()(
+                custom_transforms.RandomRotation(
+                    self.random)(
+                    custom_transforms.GaussianBlur(9, sigma=(0.1, 5.0))(
+                    custom_transforms.Resize((256,256))(
+                    custom_transforms.ToPILImage()(
+                        self.input)))))
 
         self.output = json_data
 
@@ -107,8 +120,14 @@ class TextneckDataset (Dataset):
                 torch.round(c7_coordinate[0] * (256 / self.output['size']['width']))) - 1) + 128 +int(self.img_size/2)+1] = self.heatmap
             c7_heatmap =c7_heatmap[128:384,128:384]
 
-        self.output_ear = ear_heatmap
-        self.output_c7 = c7_heatmap
+
+        stacks = custom_transforms.ToTensor()(
+            custom_transforms.RandomRotation(self.random)(
+                custom_transforms.Resize((256,256))(
+                    custom_transforms.ToPILImage()(torch.stack([ear_heatmap,ear_heatmap,c7_heatmap],0)))))
+
+        self.output_ear = stacks[0]
+        self.output_c7 = stacks[2]
 
         #Resize 256x256
         return self.input, self.output_ear, self.output_c7
@@ -124,13 +143,17 @@ torchvision_transform = transforms.Compose([
 # dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 #
 # for input, output_ear, output_c7 in dataloader:
-#     #print(torch.sum(output_ear), output_c7)
+#     print(output_ear[0][0][0])
 #     fig = plt.figure()
 #     rows = 1
 #     cols = 3
 #
 #     ax1 = fig.add_subplot(rows, cols, 1)
 #     ax1.imshow(input[0].permute(1,2,0))
+#     ax1.scatter(int(torch.where(output_ear[0] == torch.max(output_ear[0]))[1][0]),
+#                 int(torch.where(output_ear[0] == torch.max(output_ear[0]))[0][0]))
+#     ax1.scatter(int(torch.where(output_c7[0] == torch.max(output_c7[0]))[1][0]),
+#                 int(torch.where(output_c7[0] == torch.max(output_c7[0]))[0][0]))
 #     ax1.set_title('Input image')
 #     ax1.axis("off")
 #

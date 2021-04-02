@@ -4,7 +4,7 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import torch.nn as nn
 import os
-import turtlenet_arch_3ch
+from NonUse import turtlenet_arch_3ch
 import matplotlib.pyplot as plt
 import torch.onnx
 
